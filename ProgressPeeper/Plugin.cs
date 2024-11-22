@@ -60,11 +60,11 @@ public sealed partial class Plugin : IDalamudPlugin
         Services.CommandManager.RemoveHandler(Command);
     }
 
-    private static void PrintChatError(string err)
+    private static void PrintChatError(string msg)
     {
         var builder = new SeStringBuilder();
         FancyChat.PrintLogo(ref builder);
-        builder.AddUiForeground("Unknown option(s): ", 73);
+        builder.AddUiForeground(msg, 73);
         Services.ChatGui.Print(builder.Build());
     }
 
@@ -74,7 +74,7 @@ public sealed partial class Plugin : IDalamudPlugin
         {
             if (!TomestoneClient.HasAuthorizationToken())
             {
-                PrintChatError("No Tomestone token configured. Use '/ppeep cfg' to open the configuration window.");
+                PrintChatError($"No Tomestone token configured. Use '{Command} cfg' to open the configuration window.");
             }
             else
             {
@@ -114,7 +114,7 @@ public sealed partial class Plugin : IDalamudPlugin
             {
                 if (!TomestoneClient.HasAuthorizationToken())
                 {
-                    PrintChatError("No Tomestone token configured. Use '/ppeep cfg' to open the configuration window.");
+                    PrintChatError($"No Tomestone token configured. Use '{Command} cfg' to open the configuration window.");
                 }
                 else
                 {
