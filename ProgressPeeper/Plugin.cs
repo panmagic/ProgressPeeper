@@ -78,9 +78,19 @@ public sealed partial class Plugin : IDalamudPlugin
             }
             else
             {
-                foreach (var member in partyMemberListener.GetCurrentMembers())
+                if (partyMemberListener.GetCurrentMembers() is var members && members.Count > 0)
                 {
-                    doProgressPeep(member.Name, member.World);
+                    foreach (var member in partyMemberListener.GetCurrentMembers())
+                    {
+                        doProgressPeep(member.Name, member.World);
+                    }
+                }
+                else
+                {
+                    var builder = new SeStringBuilder();
+                    FancyChat.PrintLogo(ref builder);
+                    builder.AddUiForeground("No party members.", 20);
+                    Services.ChatGui.Print(builder.Build());
                 }
             }
         }
