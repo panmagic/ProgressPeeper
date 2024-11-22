@@ -1,0 +1,52 @@
+name: Code Deployment
+
+on:
+  push:
+    tags:
+      - v*.*.*.*
+
+jobs:
+  release-plugin:
+    name: Release Plugin
+    permissions: write-all
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Download Dalamud
+        run: |
+          Invoke-WebRequest -Uri 'https://goatcorp.github.io/dalamud-distrib/latest.zip' -OutFile latest.zip
+          Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev\"
+
+      - name: Build
+        run: |
+          dotnet restore -r win ProgressPeeper.sln
+          dotnet build --configuration Release
+
+      - name: Congiure Release Files
+        shell: bash
+        run: |
+          DOWNLOAD_LINK="https://github.com/PanMagic/ProgressPeeper/releases/download/${GITHUB_REF##*/}/plugin.zip"
+
+          curl -L -o /usr/bin/jq.exe https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe
+          mv ProgressPeeper/bin/x64/Release/ProgressPeeper/latest.zip plugin.zip
+          mv ProgressPeeper/bin/x64/Release/ProgressPeeper/ProgressPeeper.json manifest.json
+
+          jq --arg ASSEMBLY_VERSION "${GITHUB_REF##*/v}" -r '. += {"AssemblyVersion": $ASSEMBLY_VERSION}' manifest.json > manifest.temp && mv manifest.temp manifest.json
+          jq --argjson LAST_UPDATE "$( date +%s )" -r '. += {"LastUpdate": $LAST_UPDATE}' manifest.json > manifest.temp && mv manifest.temp manifest.json
+          jq --arg DOWNLOAD_LINK "$DOWNLOAD_LINK" -r '. += {"DownloadLinkInstall": $DOWNLOAD_LINK}' manifest.json > manifest.temp && mv manifest.temp manifest.json
+          jq --arg DOWNLOAD_LINK "$DOWNLOAD_LINK" -r '. += {"DownloadLinkUpdate": $DOWNLOAD_LINK}' manifest.json > manifest.temp && mv manifest.temp manifest.json
+          jq --arg DOWNLOAD_LINK "$DOWNLOAD_LINK" -r '. += {"DownloadLinkTesting": $DOWNLOAD_LINK}' manifest.json > manifest.temp && mv manifest.temp manifest.json
+          jq -r '. += {"RepoUrl": "https://github.com/panmagic/ProgressPeeper"}' manifest.json > manifest.temp && mv manifest.temp manifest.json
+          jq -r '[.]' manifest.json > temp.json && mv temp.json manifest.json
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            plugin.zip
+            manifest.json

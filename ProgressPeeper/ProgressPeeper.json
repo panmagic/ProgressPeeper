@@ -1,0 +1,11 @@
+{
+    "Author": "panmagic",
+    "Name": "ProgressPeeper",
+    "Punchline": "Automatic progress reporting from Tomestone.",
+    "Description": "A simple plugin for printing party members Tomestone summaries when they join a party.",
+    "ApplicableVersion": "any",
+    "Tags": [
+        "fflogs",
+        "tomestone"
+    ]
+}
