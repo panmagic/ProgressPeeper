@@ -125,7 +125,7 @@ public sealed partial class Plugin : IDalamudPlugin
             {
                 var builder = new SeStringBuilder();
                 FancyChat.PrintLogo(ref builder);
-                builder.AddUiForeground("Unknown option(s): ", 73);
+                builder.AddUiForeground($"Unknown option(s): {args}", 73);
                 Services.ChatGui.Print(builder.Build());
             }
         }

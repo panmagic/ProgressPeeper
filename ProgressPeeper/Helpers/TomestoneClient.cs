@@ -104,7 +104,10 @@ namespace ProgressPeeper.Helpers
             set
             {
                 Client.DefaultRequestHeaders.Clear();
-                Client.DefaultRequestHeaders.Add("Authorization", "Bearer " + value);
+                if (value != String.Empty)
+                {
+                    Client.DefaultRequestHeaders.Add("Authorization", "Bearer " + value);
+                }
             }
         }
 
