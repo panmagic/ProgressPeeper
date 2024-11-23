@@ -48,8 +48,6 @@ public sealed partial class Plugin : IDalamudPlugin
                 doProgressPeep(args.Name, args.World);
             }
         };
-
-        configWindow.Open();
     }
 
     public void Dispose()
