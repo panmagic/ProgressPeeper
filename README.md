@@ -1,5 +1,9 @@
 # ProgressPeeper
 
+![demo image](demo-1.png)
+
+## Install
+
 Repository manifest file:
 
 ```
@@ -8,4 +12,4 @@ https://github.com/panmagic/ProgressPeeper/releases/latest/download/manifest.jso
 
 To install this plugin, add the above path to your Dalamud Custom Repositories list:
 
-![install guide iamge refrence](install-guide-1.png)
+![install guide image](install-guide-1.png)
