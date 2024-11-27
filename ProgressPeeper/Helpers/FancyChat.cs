@@ -89,7 +89,7 @@ namespace ProgressPeeper.Helpers
         {
             ushort glow = encounterName switch
             {
-                "FRU" => 1,
+                "FRU" => 7,
                 _ => 0,
             };
 
@@ -100,7 +100,7 @@ namespace ProgressPeeper.Helpers
                 "TEA" => 74,
                 "DSR" => 28,
                 "TOP" => 56,
-                "FRU" => 7,
+                "FRU" => 37,
                 _ => defaultColor,
             };
 

@@ -2,6 +2,7 @@ using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using ProgressPeeper.Helpers;
 using System;
 using System.Collections.Generic;
@@ -184,6 +185,11 @@ public sealed partial class Plugin : IDalamudPlugin
                     {
                         FancyChat.WithEncounterStyle(ref builder, 2, progressionTarget.Name, (ref SeStringBuilder builder) =>
                         {
+                            if (progressionTarget.Name == "FRU")
+                            {
+                                builder.AddText(" ");
+                            }
+
                             var text = $"{progressionTarget.Name} {progressionTarget.Percent}";
                             text += text.Contains('%') ? "" : "%";
                             builder.AddText(text);
@@ -214,7 +220,14 @@ public sealed partial class Plugin : IDalamudPlugin
                     FancyChat.WithLink(ref builder, clearedEncounter.Link(apiCharacter.Name, apiCharacter.Id), (ref SeStringBuilder builder) =>
                     {
                         builder.AddUiGlow(45);
-                        builder.AddUiForeground("", 42);
+                        if (clearedEncounter.CompactName == "FRU")
+                        {
+                            builder.AddUiForeground("", 42);
+                        }
+                        else
+                        {
+                            builder.AddUiForeground("", 42);
+                        }
                         builder.AddUiGlowOff();
 
                         FancyChat.WithEncounterStyle(ref builder, 2, clearedEncounter.CompactName, (ref SeStringBuilder builder) =>
