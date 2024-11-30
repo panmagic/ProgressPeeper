@@ -25,7 +25,11 @@ namespace ProgressPeeper
             public override void Draw()
             {
                 var enabled = configuration.Enabled;
+                var printExtremeClears = configuration.PrintExtremeClears;
+                var printSavageClears = configuration.PrintSavageClears;
+                var printUltimateClears = configuration.PrintUltimateClears;
                 var tomestoneAuthorizationToken = configuration.TomestoneAuthorizationToken;
+                var useShortCommand = configuration.UseShortCommand;
 
                 if (ImGui.Checkbox($"{Pad}Automatic Peeping{Pad}", ref enabled))
                 {
@@ -65,6 +69,42 @@ namespace ProgressPeeper
 
                     ImGui.AlignTextToFramePadding();
                     ImGui.BulletText("Paste it into the box above!");
+                }
+
+                if (ImGui.CollapsingHeader("Extra Options"))
+                {
+                    ImGui.Spacing();
+                    ImGui.AlignTextToFramePadding();
+
+                    if (ImGui.Checkbox($"{Pad}Print Extreme Clears{Pad}", ref printExtremeClears))
+                    {
+                        configuration.PrintExtremeClears = printExtremeClears;
+                        configuration.Save();
+                    }
+
+                    ImGui.AlignTextToFramePadding();
+
+                    if (ImGui.Checkbox($"{Pad}Print Savage Clears{Pad}", ref printSavageClears))
+                    {
+                        configuration.PrintSavageClears = printSavageClears;
+                        configuration.Save();
+                    }
+
+                    ImGui.AlignTextToFramePadding();
+
+                    if (ImGui.Checkbox($"{Pad}Print Ultimate Clears{Pad}", ref printUltimateClears))
+                    {
+                        configuration.PrintUltimateClears = printUltimateClears;
+                        configuration.Save();
+                    }
+
+                    ImGui.AlignTextToFramePadding();
+
+                    if (ImGui.Checkbox($"{Pad}Use Short /pp Command{Pad}", ref useShortCommand))
+                    {
+                        configuration.UseShortCommand = useShortCommand;
+                        configuration.Save();
+                    }
                 }
             }
 

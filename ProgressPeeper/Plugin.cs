@@ -13,6 +13,7 @@ namespace ProgressPeeper;
 public sealed partial class Plugin : IDalamudPlugin
 {
     private const string Command = "/ppeep";
+    private const string ShortCommand = "/pp";
 
     private readonly ConfigurationWindow configWindow;
     private readonly PartyMemberListener partyMemberListener;
@@ -41,6 +42,26 @@ public sealed partial class Plugin : IDalamudPlugin
             {Command} <Character> @ <World> → Print status for the designated character.
             """
         });
+
+        Configuration.OnSave += (sender, args) =>
+        {
+            if (args.UseShortCommand)
+            {
+                Services.CommandManager.AddHandler(ShortCommand, new CommandInfo(OnCommand)
+                {
+                    HelpMessage = $"""
+                    Short-hand for /ppeep.
+                    """
+                });
+            }
+            else
+            {
+                Services.CommandManager.RemoveHandler(ShortCommand);
+            }
+        };
+
+        // Trigger the above to register or unregister the command:
+        Configuration.Save();
 
         (partyMemberListener = new() { }).OnJoin += (sender, args) =>
         {
@@ -142,7 +163,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
     public void ToggleConfigUI() => configWindow.Toggle();
 
-    private static void doProgressPeep(string name, string world)
+    private void doProgressPeep(string name, string world)
     {
         Task.Run(async () =>
         {
@@ -197,16 +218,23 @@ public sealed partial class Plugin : IDalamudPlugin
                     });
                 }
 
-                List<TomestoneClient.ApiEncounter> clearedEncounters = [
-                    ..apiCharacter.Encounters.Savage ?? [], // Does anyone really care about savage?
-                    ..apiCharacter.Encounters.Ultimate ?? [],
-                ];
+                List<TomestoneClient.ApiEncounter> clearedEncounters = [];
+
+                if (Configuration.PrintSavageClears)
+                {
+                    clearedEncounters.AddRange(apiCharacter.Encounters.Savage ?? []);
+                }
+
+                if (Configuration.PrintUltimateClears)
+                {
+                    clearedEncounters.AddRange(apiCharacter.Encounters.Ultimate ?? []);
+                }
 
                 clearedEncounters.RemoveAll(item => item.Activity == null && item.Achievement == null);
 
-                if (clearedEncounters.Count == 0)
+                if (clearedEncounters.Count == 0 && Configuration.PrintExtremeClears)
                 {
-                    clearedEncounters.AddRange(apiCharacter.Encounters.Extremes);
+                    clearedEncounters.AddRange(apiCharacter.Encounters.Extremes ?? []);
                 }
 
                 clearedEncounters.RemoveAll(item => item.Activity == null && item.Achievement == null);
