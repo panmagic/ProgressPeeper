@@ -1,6 +1,6 @@
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.IO;
 using System.Numerics;
@@ -63,7 +63,7 @@ namespace ProgressPeeper
                     if (image != null)
                     {
                         ImGui.Spacing();
-                        ImGui.Image(image.ImGuiHandle, new Vector2(image.Width, image.Height));
+                        ImGui.Image(image.Handle, new Vector2(image.Width, image.Height));
                         ImGui.Spacing();
                     }
 

@@ -20,7 +20,7 @@ namespace ProgressPeeper.Helpers
             {
                 if (opCodes.Count > 100)
                 {
-                    Services.PluginInterface.RemoveChatLinkHandler(opCodes[0]);
+                    Services.ChatGui.RemoveChatLinkHandler(opCodes[0]);
                     opCodes.RemoveAt(0);
                 }
 
@@ -28,9 +28,9 @@ namespace ProgressPeeper.Helpers
                 var opCode = BitConverter.ToUInt32(hashed, 0);
                 opCodes.Add(opCode);
 
-                Services.PluginInterface.RemoveChatLinkHandler(opCode);
+                Services.ChatGui.RemoveChatLinkHandler(opCode);
 
-                return Services.PluginInterface.AddChatLinkHandler(opCode, (uint OpCode, SeString clickedString) =>
+                return Services.ChatGui.AddChatLinkHandler(opCode, (uint OpCode, SeString clickedString) =>
                 {
                     Process.Start(new ProcessStartInfo { FileName = destination, UseShellExecute = true });
                 });
@@ -40,7 +40,7 @@ namespace ProgressPeeper.Helpers
             {
                 foreach (var opCode in opCodes)
                 {
-                    Services.PluginInterface.RemoveChatLinkHandler(opCode);
+                    Services.ChatGui.RemoveChatLinkHandler(opCode);
                 }
             }
         }

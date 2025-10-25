@@ -33,25 +33,33 @@ public sealed partial class Plugin : IDalamudPlugin
 
         TomestoneClient.AuthorizationToken = Configuration.TomestoneAuthorizationToken;
 
-        Services.CommandManager.AddHandler(Command, new CommandInfo(OnCommand)
+        if (!Services.CommandManager.Commands.ContainsKey(Command))
         {
-            HelpMessage = $"""
-            Re-print status status for your current party.
-            {Command} enable/disable → Toggle the automatic plugin functionality on/off.
-            {Command} cfg → Open configuration window.
-            {Command} <Character> @ <World> → Print status for the designated character.
-            """
-        });
+            Services.CommandManager.AddHandler(Command, new CommandInfo(OnCommand)
+            {
+                HelpMessage = $"""
+                               Re-print status status for your current party.
+                               {Command} enable/disable → Toggle the automatic plugin functionality on/off.
+                               {Command} cfg → Open configuration window.
+                               {Command} <Character> @ <World> → Print status for the designated character.
+                               """
+            });
+        }
 
         Configuration.OnSave += (sender, args) =>
         {
             if (args.UseShortCommand)
             {
+                if (Services.CommandManager.Commands.ContainsKey(ShortCommand))
+                {
+                    return;
+                }
+
                 Services.CommandManager.AddHandler(ShortCommand, new CommandInfo(OnCommand)
                 {
                     HelpMessage = $"""
-                    Short-hand for /ppeep.
-                    """
+                                   Short-hand for /ppeep.
+                                   """
                 });
             }
             else

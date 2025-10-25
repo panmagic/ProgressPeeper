@@ -69,7 +69,7 @@ internal unsafe class PartyMemberListener : IDisposable
                 {
                     Name = groupMember->NameString,
                     World = Services.DataManager.GetExcelSheet<World>()?.GetRow((uint)groupMember->HomeWorld).Name.ToString() ?? "???",
-                    IsLeader = groupMember->IsPartyLeader == 1,
+                    IsLeader = groupMember->IsPartyLeader,
                 };
 
                 if (!partyMembers.Contains(pm))
