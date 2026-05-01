@@ -1,15 +1,15 @@
+using System;
 using Dalamud.Configuration;
 using ProgressPeeper.Helpers;
-using System;
 
 namespace ProgressPeeper;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public event EventHandler<Configuration>? OnSave;
-
     public bool Enabled { get; set; } = true;
+
+    public bool PrintLogo { get; set; } = true;
 
     public bool PrintExtremeClears { get; set; } = true;
 
@@ -22,6 +22,7 @@ public class Configuration : IPluginConfiguration
     public bool UseShortCommand { get; set; } = true;
 
     public int Version { get; set; } = 0;
+    public event EventHandler<Configuration>? OnSave;
 
     public void Save()
     {

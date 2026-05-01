@@ -1,30 +1,17 @@
+using System;
+using System.Collections.Generic;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using Lumina.Excel.Sheets;
-using System;
-using System.Collections.Generic;
 
 namespace ProgressPeeper.Helpers;
 
 internal unsafe class PartyMemberListener : IDisposable
 {
-    internal class PartyMember : IEquatable<PartyMember>
-    {
-        public string Name = string.Empty;
-        public string World = string.Empty;
-        public bool IsLeader = false;
-
-        public bool Equals(PartyMember? other) => other != null && Name == other.Name && World == other.World;
-    }
-
-    public event EventHandler<PartyMember>? OnJoin;
-    public event EventHandler<List<PartyMember>>? OnChange;
-    public event EventHandler<PartyMember>? OnLeave;
-
     private readonly TimeSpan tickInterval = TimeSpan.FromMilliseconds(200); // How often to check for party changes (5 times per second).
 
-    private DateTime? leaveLock = null;
-    private List<PartyMember> partyMembers = [new PartyMember { }]; // An initial empty value so that the first check will always be dirty.
+    private DateTime? leaveLock;
+    private List<PartyMember> partyMembers = [new()]; // An initial empty value so that the first check will always be dirty.
     private TimeSpan updateDeltaCounter = TimeSpan.Zero;
 
     public PartyMemberListener()
@@ -37,27 +24,25 @@ internal unsafe class PartyMemberListener : IDisposable
         Services.Framework.Update -= OnFrameworkTick;
     }
 
+    public event EventHandler<PartyMember>? OnJoin;
+    public event EventHandler<List<PartyMember>>? OnChange;
+    public event EventHandler<PartyMember>? OnLeave;
+
     private void OnFrameworkTick(IFramework framework)
     {
         if ((updateDeltaCounter += framework.UpdateDelta) < tickInterval)
-        {
             return;
-        }
-        else
-        {
-            updateDeltaCounter = TimeSpan.Zero;
-        }
+
+        updateDeltaCounter = TimeSpan.Zero;
 
         if (!Services.ClientState.IsLoggedIn)
-        {
             return;
-        }
 
         var currentMemberList = new List<PartyMember>();
 
         var dirtyInInstance = false;
-        var dirtyJoin = false;
-        var dirtyLeave = false;
+        var dirtyJoin       = false;
+        var dirtyLeave      = false;
 
         if (InfoProxyCrossRealm.IsCrossRealmParty())
         {
@@ -67,8 +52,8 @@ internal unsafe class PartyMemberListener : IDisposable
 
                 var pm = new PartyMember
                 {
-                    Name = groupMember->NameString,
-                    World = Services.DataManager.GetExcelSheet<World>()?.GetRow((uint)groupMember->HomeWorld).Name.ToString() ?? "???",
+                    Name     = groupMember->NameString,
+                    World    = Services.DataManager.GetExcelSheet<World>()?.GetRow((uint)groupMember->HomeWorld).Name.ToString() ?? "???",
                     IsLeader = groupMember->IsPartyLeader,
                 };
 
@@ -87,8 +72,8 @@ internal unsafe class PartyMemberListener : IDisposable
             {
                 var pm = new PartyMember
                 {
-                    Name = item.Name.ToString(),
-                    World = Services.DataManager.GetExcelSheet<World>()?.GetRow(item.World.RowId).Name.ToString() ?? "???",
+                    Name     = item.Name.ToString(),
+                    World    = Services.DataManager.GetExcelSheet<World>()?.GetRow(item.World.RowId).Name.ToString() ?? "???",
                     IsLeader = false,
                 };
 
@@ -106,10 +91,8 @@ internal unsafe class PartyMemberListener : IDisposable
 
         foreach (var item in partyMembers)
         {
-            if (!currentMemberList.Contains(item) && !item.Equals(new PartyMember { }))
-            {
+            if (!currentMemberList.Contains(item) && !item.Equals(new PartyMember()))
                 missingMemberList.Add(item);
-            }
         }
 
         if (missingMemberList.Count > 0)
@@ -119,7 +102,7 @@ internal unsafe class PartyMemberListener : IDisposable
             if (leaveLock != null && leaveLock < DateTime.Now)
             {
                 processMissing = true;
-                leaveLock = null;
+                leaveLock      = null;
             }
             else if (leaveLock == null)
             {
@@ -141,7 +124,7 @@ internal unsafe class PartyMemberListener : IDisposable
                 else
                 {
                     processMissing = true;
-                    leaveLock = null;
+                    leaveLock      = null;
                 }
             }
 
@@ -155,9 +138,7 @@ internal unsafe class PartyMemberListener : IDisposable
         partyMembers = [.. currentMemberList];
 
         if (!dirtyJoin && !dirtyLeave)
-        {
             return;
-        }
 
         OnChange?.Invoke(this, partyMembers);
     }
@@ -165,5 +146,17 @@ internal unsafe class PartyMemberListener : IDisposable
     public List<PartyMember> GetCurrentMembers()
     {
         return partyMembers;
+    }
+
+    internal class PartyMember : IEquatable<PartyMember>
+    {
+        public bool IsLeader;
+        public string Name = string.Empty;
+        public string World = string.Empty;
+
+        public bool Equals(PartyMember? other)
+        {
+            return other != null && Name == other.Name && World == other.World;
+        }
     }
 }

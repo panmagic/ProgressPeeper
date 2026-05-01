@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/14.0.1">
-  <PropertyGroup>
-    <Version>0.0.0.1</Version>
-    <Description>A simple plugin for checking party members progression through Tomestone.</Description>
-    <PackageProjectUrl>https://github.com/panmagic/ProgressPeeper</PackageProjectUrl>
-    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
-    <IsPackable>false</IsPackable>
-    <TargetFramework>net10.0-windows</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <Content Include="..\Data\guide-1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>true</Visible>
-    </Content>
-  </ItemGroup>
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
+    <PropertyGroup>
+        <Version>0.0.0.1</Version>
+        <Description>A simple plugin for checking party members progression through Tomestone.</Description>
+        <PackageProjectUrl>https://github.com/panmagic/ProgressPeeper</PackageProjectUrl>
+        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+        <IsPackable>false</IsPackable>
+        <TargetFramework>net10.0-windows</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="..\Data\guide-1.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>true</Visible>
+        </Content>
+    </ItemGroup>
 </Project>

@@ -1,122 +1,118 @@
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 
-namespace ProgressPeeper.Helpers
+namespace ProgressPeeper.Helpers;
+
+internal static class FancyChat
 {
-    internal static class FancyChat
+    public delegate void RefSeStringAction(ref SeStringBuilder item);
+
+    public static DynamicChatLinkHandler DynamicChatLinkHandlerInstance = new();
+
+    public static void PrintLogo(ref SeStringBuilder builder)
     {
-        public delegate void RefSeStringAction(ref SeStringBuilder item);
+        builder.AddText(" ");
+        builder.AddItalicsOn();
+        builder.AddUiGlow(56);
+        builder.AddUiForeground("Pr", 2);
+        builder.AddUiForeground("og", 3);
+        builder.AddUiForeground("re", 4);
+        builder.AddUiForeground("ss", 5);
+        builder.AddUiForeground(" ", 1);
+        builder.AddUiForeground("Pe", 2);
+        builder.AddUiForeground("ep", 3);
+        builder.AddUiForeground("er", 4);
+        builder.AddUiGlowOff();
+        builder.AddItalicsOff();
+        builder.AddText(" ");
 
-        public class DynamicChatLinkHandler : IDisposable
+        // builder.AddUiForeground("_", 37);
+        // builder.AddUiForeground("\\", 37);
+        // builder.AddUiForeground("|", 57);
+        // builder.AddUiForeground("/", 35);
+        // builder.AddUiForeground("_", 35);
+        // builder.AddUiForeground(" ", 1);
+    }
+
+    public static void WithLink(ref SeStringBuilder builder, string url, RefSeStringAction func)
+    {
+        if (url == "")
         {
-            private readonly List<uint> opCodes = [];
+            func(ref builder);
 
-            public DalamudLinkPayload GetDynamicLinkPayload(string destination)
-            {
-                if (opCodes.Count > 100)
-                {
-                    Services.ChatGui.RemoveChatLinkHandler(opCodes[0]);
-                    opCodes.RemoveAt(0);
-                }
-
-                var hashed = MD5.HashData(Encoding.UTF8.GetBytes(destination));
-                var opCode = BitConverter.ToUInt32(hashed, 0);
-                opCodes.Add(opCode);
-
-                Services.ChatGui.RemoveChatLinkHandler(opCode);
-
-                return Services.ChatGui.AddChatLinkHandler(opCode, (uint OpCode, SeString clickedString) =>
-                {
-                    Process.Start(new ProcessStartInfo { FileName = destination, UseShellExecute = true });
-                });
-            }
-
-            public void Dispose()
-            {
-                foreach (var opCode in opCodes)
-                {
-                    Services.ChatGui.RemoveChatLinkHandler(opCode);
-                }
-            }
+            return;
         }
 
-        public static DynamicChatLinkHandler DynamicChatLinkHandlerInstance= new() { };
+        builder.Add(DynamicChatLinkHandlerInstance.GetDynamicLinkPayload(url));
+        func(ref builder);
+        builder.Add(RawPayload.LinkTerminator);
+    }
 
-        public static void PrintLogo(ref SeStringBuilder builder)
+    public static void WithEncounterStyle(ref SeStringBuilder builder, ushort defaultColor, string encounterName, RefSeStringAction func)
+    {
+        ushort glow = encounterName switch
         {
-            builder.AddText(" ");
-            builder.AddItalicsOn();
-            builder.AddUiGlow(56);
-            builder.AddUiForeground("Pr", 2);
-            builder.AddUiForeground("og", 3);
-            builder.AddUiForeground("re", 4);
-            builder.AddUiForeground("ss", 5);
-            builder.AddUiForeground(" ", 1);
-            builder.AddUiForeground("Pe", 2);
-            builder.AddUiForeground("ep", 3);
-            builder.AddUiForeground("er", 4);
+            "FRU" => 7,
+            _     => 0,
+        };
+
+        ushort color = encounterName switch
+        {
+            "UCOB" => 25,
+            "UWU"  => 34,
+            "TEA"  => 74,
+            "DSR"  => 28,
+            "TOP"  => 56,
+            "FRU"  => 37,
+            _      => defaultColor,
+        };
+
+        if (glow != 0)
+            builder.AddUiGlow(glow);
+
+        builder.AddUiForeground(color);
+        func(ref builder);
+        builder.AddUiForegroundOff();
+
+        if (glow != 0)
             builder.AddUiGlowOff();
-            builder.AddItalicsOff();
-            builder.AddText(" ");
+    }
 
-            // builder.AddUiForeground("_", 37);
-            // builder.AddUiForeground("\\", 37);
-            // builder.AddUiForeground("|", 57);
-            // builder.AddUiForeground("/", 35);
-            // builder.AddUiForeground("_", 35);
-            // builder.AddUiForeground(" ", 1);
+    public class DynamicChatLinkHandler : IDisposable
+    {
+        private readonly List<uint> opCodes = [];
+
+        public void Dispose()
+        {
+            foreach (var opCode in opCodes)
+            {
+                Services.ChatGui.RemoveChatLinkHandler(opCode);
+            }
         }
 
-        public static void WithLink(ref SeStringBuilder builder, string url, RefSeStringAction func)
+        public DalamudLinkPayload GetDynamicLinkPayload(string destination)
         {
-            if (url == "")
+            if (opCodes.Count > 100)
             {
-                func(ref builder);
-                return;
+                Services.ChatGui.RemoveChatLinkHandler(opCodes[0]);
+                opCodes.RemoveAt(0);
             }
 
-            builder.Add(DynamicChatLinkHandlerInstance.GetDynamicLinkPayload(url));
-            func(ref builder);
-            builder.Add(RawPayload.LinkTerminator);
-        }
+            var hashed = MD5.HashData(Encoding.UTF8.GetBytes(destination));
+            var opCode = BitConverter.ToUInt32(hashed, 0);
+            opCodes.Add(opCode);
 
-        public static void WithEncounterStyle(ref SeStringBuilder builder, ushort defaultColor, string encounterName, RefSeStringAction func)
-        {
-            ushort glow = encounterName switch
-            {
-                "FRU" => 7,
-                _ => 0,
-            };
+            Services.ChatGui.RemoveChatLinkHandler(opCode);
 
-            ushort color = encounterName switch
-            {
-                "UCOB" => 25,
-                "UWU" => 34,
-                "TEA" => 74,
-                "DSR" => 28,
-                "TOP" => 56,
-                "FRU" => 37,
-                _ => defaultColor,
-            };
-
-            if (glow != 0)
-            {
-                builder.AddUiGlow(glow);
-            }
-
-            builder.AddUiForeground(color);
-            func(ref builder);
-            builder.AddUiForegroundOff();
-
-            if (glow != 0)
-            {
-                builder.AddUiGlowOff();
-            }
+            return Services.ChatGui.AddChatLinkHandler(
+                opCode,
+                (OpCode, clickedString) => { Process.Start(new ProcessStartInfo { FileName = destination, UseShellExecute = true }); }
+            );
         }
     }
 }

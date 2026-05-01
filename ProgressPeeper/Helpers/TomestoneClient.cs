@@ -1,135 +1,172 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
-namespace ProgressPeeper.Helpers
+namespace ProgressPeeper.Helpers;
+
+internal static class TomestoneClient
 {
-    internal static class TomestoneClient
+    private static readonly HttpClient Client = new();
+
+    public static string AuthorizationToken
     {
-        internal class ApiAchievement
+        set
         {
-            [JsonProperty("id")] public int Id = 0;
+            Client.DefaultRequestHeaders.Clear();
+
+            if (value != string.Empty)
+                Client.DefaultRequestHeaders.Add("Authorization", "Bearer " + value);
         }
+    }
 
-        internal class ApiActivity
+    public static bool HasAuthorizationToken()
+    {
+        return Client.DefaultRequestHeaders.Contains("Authorization");
+    }
+
+    public static async Task<ApiCharacter> FetchCharacterOverview(string name, string world)
+    {
+        var response = await Client.GetAsync($"https://tomestone.gg/api/character/profile/{world}/{name}");
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            throw new Exception("Character not found.");
+
+        if (response.StatusCode != HttpStatusCode.OK)
+            throw new Exception($"Failed to fetch character data ({response.StatusCode}).");
+
+        var jsonContent = await response.Content.ReadAsStringAsync();
+
+        var apiCharacter = JsonConvert.DeserializeObject<ApiCharacter>(jsonContent);
+
+        return apiCharacter == null || !apiCharacter.IsValid() ? throw new Exception("Failed to parse character data.") : apiCharacter;
+    }
+
+    internal class ApiAchievement
+    {
+        [JsonProperty("id")]
+        public int Id;
+    }
+
+    internal class ApiActivity
+    {
+        [JsonProperty("id")]
+        public int Id;
+    }
+
+    internal class ApiCharacter
+    {
+        [JsonProperty("datacenter")]
+        public string DataCenter = string.Empty;
+
+        [JsonProperty("encounters")]
+        public ApiEncounters Encounters = new();
+
+        [JsonProperty("id")]
+        public int Id;
+
+        [JsonProperty("name")]
+        public string Name = string.Empty;
+
+        [JsonProperty("server")]
+        public string Server = string.Empty;
+
+        public string Link()
         {
-            [JsonProperty("id")] public int Id = 0;
-        }
-
-        internal class ApiCharacter
-        {
-            [JsonProperty("id")] public int Id = 0;
-            [JsonProperty("name")] public string Name = string.Empty;
-            [JsonProperty("server")] public string Server = string.Empty;
-            [JsonProperty("datacenter")] public string DataCenter = string.Empty;
-            [JsonProperty("encounters")] public ApiEncounters Encounters = new() { };
-
-            public string Link()
-            {
-                if (Id == 0 || Name == "")
-                {
-                    return "";
-                }
-
-                return $"https://tomestone.gg/character/{Id}/{Name}";
-            }
-
-            public bool IsValid()
-            {
-                return Id != 0;
-            }
-        }
-
-        internal class ApiEncounter
-        {
-            [JsonProperty("id")] public int Id = 0;
-            [JsonProperty("name")] public string Name = string.Empty;
-            [JsonProperty("compactName")] public string CompactName = string.Empty;
-            [JsonProperty("zoneName")] public string ZoneName = string.Empty;
-            [JsonProperty("activity")] public ApiActivity? Activity = null;
-            [JsonProperty("achievement")] public ApiAchievement? Achievement = null;
-
-            public string Link(string name, int tomestoneId)
-            {
-                if (name == "" || tomestoneId == 0 || Activity == null && Achievement == null)
-                {
-                    return "";
-                }
-
-                if (ZoneName.Contains("Savage"))
-                {
-                    return $"https://tomestone.gg/character/{tomestoneId}/{name}/clears?encounterCategory=savage";
-                }
-
-                if (ZoneName.Contains("Ultimate"))
-                {
-                    return $"https://tomestone.gg/character/{tomestoneId}/{name}/clears?encounterCategory=ultimate";
-                }
-
+            if (Id == 0 || Name == "")
                 return "";
-            }
+
+            return $"https://tomestone.gg/character/{Id}/{Name}";
         }
 
-        internal class ApiEncounters
+        public bool IsValid()
         {
-            [JsonProperty("extremes")] public List<ApiEncounter> Extremes = [];
-            [JsonProperty("extremesProgressionTarget")] public ApiProgressionTarget? ExtremesProgressionTarget = null;
-            [JsonProperty("savage")] public List<ApiEncounter> Savage = [];
-            [JsonProperty("savageProgressionTarget")] public ApiProgressionTarget? SavageProgressionTarget = null;
-            [JsonProperty("ultimate")] public List<ApiEncounter> Ultimate = [];
-            [JsonProperty("ultimateProgressionTarget")] public ApiProgressionTarget? UltimateProgressionTarget = null;
+            return Id != 0;
         }
+    }
 
-        internal class ApiProgressionTarget
+    internal class ApiEncounter
+    {
+        [JsonProperty("achievement")]
+        public ApiAchievement? Achievement;
+
+        [JsonProperty("activity")]
+        public ApiActivity? Activity;
+
+        [JsonProperty("compactName")]
+        public string CompactName = string.Empty;
+
+        [JsonProperty("id")]
+        public int Id;
+
+        [JsonProperty("name")]
+        public string Name = string.Empty;
+
+        [JsonProperty("zoneName")]
+        public string ZoneName = string.Empty;
+
+        public string Link(string name, int tomestoneId)
         {
-            [JsonProperty("name")] public string Name = string.Empty;
-            [JsonProperty("percent")] public string Percent = string.Empty;
-            [JsonProperty("link")] public string? Link = null;
-            [JsonProperty("encounter")] public ApiProgressionTargetEncounter Encounter = new() { };
-            [JsonProperty("updatedAt")] public int UpdatedAt = 0;
+            if (name == "" || tomestoneId == 0 || (Activity == null && Achievement == null))
+                return "";
+
+            if (ZoneName.Contains("Savage"))
+                return $"https://tomestone.gg/character/{tomestoneId}/{name}/clears?encounterCategory=savage";
+
+            if (ZoneName.Contains("Ultimate"))
+                return $"https://tomestone.gg/character/{tomestoneId}/{name}/clears?encounterCategory=ultimate";
+
+            return "";
         }
+    }
 
-        internal class ApiProgressionTargetEncounter
-        {
-            [JsonProperty("id")] public int Id = 0;
-            [JsonProperty("name_en")] public string Name = string.Empty;
-        }
+    internal class ApiEncounters
+    {
+        [JsonProperty("extremes")]
+        public List<ApiEncounter> Extremes = [];
 
-        private readonly static HttpClient Client = new() { };
+        [JsonProperty("extremesProgressionTarget")]
+        public ApiProgressionTarget? ExtremesProgressionTarget;
 
-        public static string AuthorizationToken
-        {
-            set
-            {
-                Client.DefaultRequestHeaders.Clear();
-                if (value != String.Empty)
-                {
-                    Client.DefaultRequestHeaders.Add("Authorization", "Bearer " + value);
-                }
-            }
-        }
+        [JsonProperty("savage")]
+        public List<ApiEncounter> Savage = [];
 
-        public static bool HasAuthorizationToken() => Client.DefaultRequestHeaders.Contains("Authorization");
+        [JsonProperty("savageProgressionTarget")]
+        public ApiProgressionTarget? SavageProgressionTarget;
 
-        public static async Task<ApiCharacter> FetchCharacterOverview(string name, string world)
-        {
-            var response = await Client.GetAsync($"https://tomestone.gg/api/character/profile/{world}/{name}");
+        [JsonProperty("ultimate")]
+        public List<ApiEncounter> Ultimate = [];
 
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                throw new Exception("Character not found.");
-            }
-            else if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                throw new Exception($"Failed to fetch character data ({response.StatusCode}).");
-            }
+        [JsonProperty("ultimateProgressionTarget")]
+        public ApiProgressionTarget? UltimateProgressionTarget;
+    }
 
-            var jsonContent = await response.Content.ReadAsStringAsync();
+    internal class ApiProgressionTarget
+    {
+        [JsonProperty("encounter")]
+        public ApiProgressionTargetEncounter Encounter = new();
 
-            var apiCharacter = JsonConvert.DeserializeObject<ApiCharacter>(jsonContent);
-            return apiCharacter == null || !apiCharacter.IsValid() ? throw new Exception("Failed to parse character data.") : apiCharacter;
-        }
+        [JsonProperty("link")]
+        public string? Link;
+
+        [JsonProperty("name")]
+        public string Name = string.Empty;
+
+        [JsonProperty("percent")]
+        public string Percent = string.Empty;
+
+        [JsonProperty("updatedAt")]
+        public int UpdatedAt;
+    }
+
+    internal class ApiProgressionTargetEncounter
+    {
+        [JsonProperty("id")]
+        public int Id;
+
+        [JsonProperty("name_en")]
+        public string Name = string.Empty;
     }
 }
