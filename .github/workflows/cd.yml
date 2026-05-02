@@ -47,6 +47,7 @@ jobs:
       - name: Move Release zip
         shell: bash
         run: |
+          sudo apt-get update && sudo apt-get install -y zip
           mv ProgressPeeper/bin/x64/Release/ProgressPeeper/latest.zip plugin.zip
           cp manifest.json ProgressPeeper.json
           ls -lahg
