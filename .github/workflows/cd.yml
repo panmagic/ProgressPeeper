@@ -43,6 +43,11 @@ jobs:
         run: |
           dotnet restore -r win ProgressPeeper.sln
           dotnet build --configuration Release
+      
+      - name: Move Release zip
+        shell: bash
+        run: |
+          mv ProgressPeeper/bin/x64/Release/ProgressPeeper/latest.zip plugin.zip
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
