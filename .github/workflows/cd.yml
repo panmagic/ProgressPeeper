@@ -31,11 +31,15 @@ jobs:
           jq --arg DOWNLOAD_LINK "$DOWNLOAD_LINK" -r '. += {"DownloadLinkUpdate": $DOWNLOAD_LINK}' manifest.json > manifest.temp && mv manifest.temp manifest.json
           jq --arg DOWNLOAD_LINK "$DOWNLOAD_LINK" -r '. += {"DownloadLinkTesting": $DOWNLOAD_LINK}' manifest.json > manifest.temp && mv manifest.temp manifest.json
           jq -r '. += {"RepoUrl": "https://github.com/panmagic/ProgressPeeper"}' manifest.json > manifest.temp && mv manifest.temp manifest.json
-          rm ProgressPeeper/ProgressPeeper.json
+          echo ----
           cp manifest.json ProgressPeeper/ProgressPeeper.json
+          echo ----
           cat ProgressPeeper/ProgressPeeper.json
+          echo ----
           cat manifest.json
+          echo ----
           ls ProgressPeeper
+          echo ----
           jq -r '[.]' manifest.json > temp.json && mv temp.json manifest.json
 
       - name: Download Dalamud
